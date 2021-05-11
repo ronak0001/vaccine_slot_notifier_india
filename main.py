@@ -1,6 +1,6 @@
 __author__ = "Ronak Prajapati"
 __copyright__ = "Copyright 2021, RKP, Vaccine Slot Notifier India"
-__version__ = "0.0.0"
+__version__ = "1.0.0"
 __maintainer__ = "Ronak Prajapati"
 __email__ = "prajapatironak12@gmail.com"
 __status__ = "Development"
