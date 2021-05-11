@@ -1,0 +1,9 @@
+name: vsn
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pip:
+      - pandas
+      - configparser
+      - requests

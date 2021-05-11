@@ -1,0 +1,13 @@
+export config_file=config/app.config
+export mode=prod
+export mobile_number=dummy
+export state_id=dummy
+export state_name=Gujarat
+export district_id=dummy
+export district_name=Ahmedabad_Corporation
+export pin_code=dummy
+export date=dummy
+export date_window=7
+export district_id=dummy
+export sender=sample_email@gmail.com
+export sender_password=Sample@Password
