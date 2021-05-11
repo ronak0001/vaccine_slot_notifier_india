@@ -21,7 +21,7 @@ if __name__ == "__main__":
     cfg = get_config(config_file, mode)
 
     subscribers_grouped_df = fetch_subscribers(cfg['subscribers_input_file_path'],
-                                               eval(cfg['subscribers_group_by_cols']))
+                                               eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
 
     for i, row in subscribers_grouped_df[eval(cfg['geo_cols'])].\
             drop_duplicates().iterrows():
