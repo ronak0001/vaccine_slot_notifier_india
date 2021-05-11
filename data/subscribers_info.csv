@@ -1,3 +1,7 @@
-recipients,min_age_limit
-sample_email_1@gmail.com,18
-sample_email_2@gmail.com,45
+recipients,min_age_limit,district_name,state_name
+sampleemail1@gmail.com,18,Ahmedabad Corporation,Gujarat
+sampleemail2@gmail.com,45,Ahmedabad,Gujarat
+sampleemail2@gmail.com,45,Rajkot,Gujarat
+sampleemail2@gmail.com,45,Ahmedabad Corporation,Gujarat
+sampleemail1@gmail.com,18,Ahmedabad,Gujarat
+sampleemail1@gmail.com,45,Rajkot,Gujarat

@@ -53,51 +53,51 @@ def fetch_subscribers(path, group_by_cols):
     return subscribers
 
 
-def set_state_id(cfg):
+def set_state_id(cfg, state_name='dummy'):
     """
     Setting up state_id in config.
 
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
+    :param state_name: state name
+    :type state_name: str
     :return: no value
     :rtype: none
     """
-    if os.getenv('state_id', '') != cfg['dummy_check']:
-        cfg['state_id'] = os.getenv('state_id', '')
-    elif os.getenv('state_name', '') != cfg['dummy_check']:
-        cfg['state_name'] = os.getenv('state_name', '').replace('_', ' ')
+    if state_name != cfg['dummy_check']:
+        cfg['state_name'] = state_name
         states_resp_df = get_states(cfg['states_get_url'], eval(cfg['request_header']))
-        cfg['state_id'] = str(states_resp_df[states_resp_df['state_name'] == cfg['state_name']]['state_id'].values[0])
+        try:
+            cfg['state_id'] = str(states_resp_df[states_resp_df['state_name'] == cfg['state_name']]['state_id'].values[0])
+        except Exception as e:
+            raise Exception("Enter valid state_name")
     else:
-        if os.getenv('state_name', '') == cfg['dummy_check'] and os.getenv('state_id', '') == cfg['dummy_check']:
-            raise Exception("No state_name or state_id found in env.sh")
-        else:
-            raise Exception("Enter valid state_name or state_id")
+        raise Exception("Enter valid state_name")
     pass
 
 
-def set_district_id(cfg):
+def set_district_id(cfg, district_name='dummy'):
     """
     Setting up district_id in config.
 
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
+    :param district_name: district name
+    :type district_name: str
     :return: no value
     :rtype: none
     """
-    if os.getenv('district_id', '') != cfg['dummy_check']:
-        cfg['district_id'] = os.getenv('district_id', '')
-    elif os.getenv('district_name', '') != cfg['dummy_check']:
-        cfg['district_name'] = os.getenv('district_name', '').replace('_', ' ')
-        district_resp_df = get_districs(cfg['districts_get_url'], eval(cfg['request_header']))
-        cfg['district_id'] = str(district_resp_df[district_resp_df['district_name'] == cfg['district_name']]['district_id'].values[0])
+    if district_name != cfg['dummy_check']:
+        cfg['district_name'] = district_name
+        districts_resp_df = get_districs(cfg['districts_get_url'], eval(cfg['request_header']))
+        try:
+            cfg['district_id'] = str(districts_resp_df[districts_resp_df['district_name'] == cfg['district_name']]['district_id'].values[0])
+        except Exception as e:
+            raise Exception("Enter valid district_name")
     else:
-        if os.getenv('district_name', '') == cfg['dummy_check'] and os.getenv('district_id', '') == cfg['dummy_check']:
-            raise Exception("No district_name or district_id found in env.sh")
-        else:
-            raise Exception("Enter valid district_name or district_id")
+        raise Exception("Enter valid district_name")
     pass
 
 
@@ -138,18 +138,22 @@ def set_dates(cfg):
     return get_dates(ds_trig, cfg['date_window'])
 
 
-def initialise_params(cfg):
+def initialise_params(cfg, state_name='dummy', district_name='dummy'):
     """
     Initialising necessary parameters.
 
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
+    :param state_name: state name
+    :type state_name: str
+    :param district_name: district name
+    :type district_name: str
     :return: Returns start date and end date values
     :rtype: datetime
     """
-    set_state_id(cfg)
-    set_district_id(cfg)
+    set_state_id(cfg, state_name=state_name)
+    set_district_id(cfg, district_name=district_name)
     set_sender(cfg)
     return set_dates(cfg)
 
