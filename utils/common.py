@@ -53,51 +53,62 @@ def fetch_subscribers(path, group_by_cols):
     return subscribers
 
 
-def set_state_id(cfg, state_name='dummy'):
+def force_reset_state_district_data(cfg):
     """
-    Setting up state_id in config.
+    Calls functions to fetch latest states and districts data, stores and also
+    returns updated data as a dataframe.
+
+    :param cfg: config parameter is used to provide necessary information
+     required to fetch and push data
+    :type cfg: dict
+    :return: Updated state and district data
+    :rtype: pandas.DataFrame()
+    """
+    response = get_states(cfg['states_get_url'], eval(cfg['request_header']))
+
+    df = pd.DataFrame()
+    for i, row in pd.DataFrame(response.json()['states']).iterrows():
+        cfg['state_id'] = str(row['state_id'])
+        temp_df = pd.DataFrame()
+        temp_df = get_districs(cfg['districts_get_url'], eval(cfg['request_header']))
+        temp_df['state_name'] = row['state_name']
+        temp_df['state_id'] = row['state_id']
+
+        df = df.append(temp_df)
+    df.to_csv(cfg['states_districts_info_file_path'], index=False)
+    return df.reset_index(drop=True)
+
+
+def set_state_district(cfg, state_name, district_name, force_reset=False):
+    """
+    Setting up state_name, state_id, district_name and district_id in config.
 
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
     :param state_name: state name
     :type state_name: str
-    :return: no value
-    :rtype: none
-    """
-    if state_name != cfg['dummy_check']:
-        cfg['state_name'] = state_name
-        states_resp_df = get_states(cfg['states_get_url'], eval(cfg['request_header']))
-        try:
-            cfg['state_id'] = str(states_resp_df[states_resp_df['state_name'] == cfg['state_name']]['state_id'].values[0])
-        except Exception as e:
-            raise Exception("Enter valid state_name")
-    else:
-        raise Exception("Enter valid state_name")
-    pass
-
-
-def set_district_id(cfg, district_name='dummy'):
-    """
-    Setting up district_id in config.
-
-    :param cfg: config parameter is used to provide necessary information
-     required to fetch and push data
-    :type cfg: dict
-    :param district_name: district name
+    :param district_name: state name
     :type district_name: str
+    :param force_reset: force reset for resetting state district data
+    :type force_reset: bool
     :return: no value
     :rtype: none
     """
-    if district_name != cfg['dummy_check']:
-        cfg['district_name'] = district_name
-        districts_resp_df = get_districs(cfg['districts_get_url'], eval(cfg['request_header']))
-        try:
-            cfg['district_id'] = str(districts_resp_df[districts_resp_df['district_name'] == cfg['district_name']]['district_id'].values[0])
-        except Exception as e:
-            raise Exception("Enter valid district_name")
+    cfg['state_name'] = state_name
+    cfg['district_name'] = district_name
+
+    if force_reset:
+        states_district_info = force_reset_state_district_data(cfg)
     else:
-        raise Exception("Enter valid district_name")
+        states_districts_info = pd.read_csv(cfg['states_districts_info_file_path'])
+
+    states_districts_info = states_districts_info.loc[
+                            (states_districts_info['state_name'] == cfg['state_name']) &
+                            (states_districts_info['district_name'] == cfg['district_name']), :]
+
+    cfg['state_id'] = str(states_districts_info['state_id'].values[0])
+    cfg['district_id'] = str(states_districts_info['district_id'].values[0])
     pass
 
 
@@ -152,8 +163,7 @@ def initialise_params(cfg, state_name='dummy', district_name='dummy'):
     :return: Returns start date and end date values
     :rtype: datetime
     """
-    set_state_id(cfg, state_name=state_name)
-    set_district_id(cfg, district_name=district_name)
+    set_state_district(cfg, state_name, district_name)
     set_sender(cfg)
     return set_dates(cfg)
 
@@ -256,7 +266,8 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
     :rtype: none
     """
     slots_resp_df_partial = slots_resp_df[eval(cfg['slots_resp_df_partial_cols']) +
-                                          eval(cfg['subscribers_group_by_cols'])]
+                                          eval(cfg['subscribers_group_by_cols']) +
+                                          eval(cfg['geo_cols'])]
 
     slots_resp_df_partial.loc[:, 'info'] = "vaccine: " + slots_resp_df_partial['vaccine'].map(str)\
                                            + " | block_name: " + slots_resp_df_partial['block_name'].map(str)\
@@ -264,9 +275,11 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
                                            + " | available_capacity: " + slots_resp_df_partial['available_capacity'].map(str)
 
     slots_resp_df_aggr = slots_resp_df_partial[eval(cfg['subscribers_group_by_cols'])
+                                               + eval(cfg['geo_cols'])
                                                + eval(cfg['email_message_info_col'])]\
-        .groupby(eval(cfg['subscribers_group_by_cols'])).agg(lambda x: ' \n'.join(set(x)))
-    slots_resp_final = slots_resp_df_aggr.merge(subscribers_df, on=eval(cfg['subscribers_group_by_cols']))
+        .groupby(eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols'])).agg(lambda x: ' \n'.join(set(x)))
+
+    slots_resp_final = slots_resp_df_aggr.merge(subscribers_df, on=eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
     send_notification(cfg, slots_resp_final)
 
     pass

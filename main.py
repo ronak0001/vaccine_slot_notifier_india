@@ -22,15 +22,17 @@ if __name__ == "__main__":
 
     subscribers_grouped_df = fetch_subscribers(cfg['subscribers_input_file_path'],
                                                eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
+    # print(subscribers_grouped_df)
 
     for i, row in subscribers_grouped_df[eval(cfg['geo_cols'])].\
             drop_duplicates().iterrows():
+        # print(row['district_name'] + ", " + row['state_name'])
 
         [ds_curr, ds_end] = initialise_params(cfg, state_name=row['state_name'], district_name=row['district_name'])
 
         while ds_curr <= ds_end:
             cfg['date'] = ds_curr.strftime('%d-%m-%Y')
-            print("Date: {}".format(cfg['date']))
+            # print("Date: {}".format(cfg['date']))
 
             slots_resp_df = find_slots_by_district(cfg['slot_check_by_district_url'],
                                                    eval(cfg['request_header']))
