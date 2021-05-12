@@ -14,6 +14,7 @@ import smtplib
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 import os
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def get_config(config_file, mode):
