@@ -106,7 +106,8 @@ def set_state_district(cfg, state_name, district_name, force_reset=False):
 
     states_districts_info = states_districts_info.loc[
                             (states_districts_info['state_name'] == cfg['state_name']) &
-                            (states_districts_info['district_name'] == cfg['district_name']), :]
+                            (states_districts_info['district_name'] == cfg['district_name']),
+                            list(states_districts_info.columns)]
 
     cfg['state_id'] = str(states_districts_info['state_id'].values[0])
     cfg['district_id'] = str(states_districts_info['district_id'].values[0])
