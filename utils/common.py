@@ -272,6 +272,7 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
                                           eval(cfg['geo_cols'])]
 
     slots_resp_df_partial.loc[:, 'info'] = "vaccine: " + slots_resp_df_partial['vaccine'].map(str)\
+                                           + " | center_name: " + slots_resp_df_partial['name'].map(str)\
                                            + " | block_name: " + slots_resp_df_partial['block_name'].map(str)\
                                            + " | pincode: " + slots_resp_df_partial['pincode'].map(str)\
                                            + " | available_capacity: " + slots_resp_df_partial['available_capacity'].map(str)
