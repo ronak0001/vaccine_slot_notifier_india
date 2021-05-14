@@ -137,8 +137,8 @@ def set_dates(cfg):
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
-    :return: Returns start date and end date values
-    :rtype: datetime
+    :return: no value
+    :rtype: none
     """
     if os.getenv('date', '') != cfg['dummy_check']:
         ds_trig = os.getenv('date', '')
@@ -148,7 +148,8 @@ def set_dates(cfg):
     if os.getenv('date_window', '') != cfg['dummy_check']:
         cfg['date_window'] = os.getenv('date_window', '')
 
-    return get_dates(ds_trig, cfg['date_window'])
+    cfg['dates'] = str(get_dates(ds_trig, cfg['date_window']))
+    pass
 
 
 def initialise_params(cfg, state_name='dummy', district_name='dummy'):
@@ -162,12 +163,13 @@ def initialise_params(cfg, state_name='dummy', district_name='dummy'):
     :type state_name: str
     :param district_name: district name
     :type district_name: str
-    :return: Returns start date and end date values
-    :rtype: datetime
+    :return: no value
+    :rtype: none
     """
     set_state_district(cfg, state_name, district_name)
     set_sender(cfg)
-    return set_dates(cfg)
+    set_dates(cfg)
+    pass
 
 
 def get_states(url, headers):
@@ -204,20 +206,23 @@ def get_districs(url, headers):
 
 def get_dates(date, date_window):
     """
-    Given date and date_window, this function generate end date
-    and returns current date and end date.
+    Given date and date_window, this function generate end date and returns
+    current date and end date.
 
     :param date: current date
     :type date: str
     :param date_window: interval in days
     :type date_window: str
-    :return: Returns start date and end date values
-    :rtype: datetime
+    :return: Returns array containing dates based on given date window
+    :rtype: array<str>
     """
     ds_curr = datetime.strptime(date, "%d-%m-%Y")
-    ds_end = ds_curr + timedelta(int(date_window)-1)
+    dates = []
 
-    return ds_curr, ds_end
+    for i in range(0, int(date_window)):
+        dates.append((ds_curr + timedelta(i)).strftime("%d-%m-%Y"))
+
+    return dates
 
 
 def find_slots_by_pin(url, headers):
@@ -271,11 +276,12 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
                                           eval(cfg['subscribers_group_by_cols']) +
                                           eval(cfg['geo_cols'])]
 
-    slots_resp_df_partial.loc[:, 'info'] = "vaccine: " + slots_resp_df_partial['vaccine'].map(str)\
-                                           + " | center_name: " + slots_resp_df_partial['name'].map(str)\
-                                           + " | block_name: " + slots_resp_df_partial['block_name'].map(str)\
-                                           + " | pincode: " + slots_resp_df_partial['pincode'].map(str)\
-                                           + " | available_capacity: " + slots_resp_df_partial['available_capacity'].map(str)
+    slots_resp_df_partial.loc[:, 'info'] = "Center Name: " + slots_resp_df_partial['name'].map(str)\
+                                           + " | Pincode: " + slots_resp_df_partial['pincode'].map(str)\
+                                           + " | Capacity: " + slots_resp_df_partial['available_capacity'].map(str)\
+                                           + " | Date: " + slots_resp_df_partial['date'].map(str)\
+                                           + " | Vaccine: " + slots_resp_df_partial['vaccine'].map(str)\
+                                           + "\n\n"
 
     slots_resp_df_aggr = slots_resp_df_partial[eval(cfg['subscribers_group_by_cols'])
                                                + eval(cfg['geo_cols'])
@@ -283,6 +289,7 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
         .groupby(eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols'])).agg(lambda x: ' \n'.join(set(x)))
 
     slots_resp_final = slots_resp_df_aggr.merge(subscribers_df, on=eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
+
     send_notification(cfg, slots_resp_final)
 
     pass

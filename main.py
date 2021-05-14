@@ -26,23 +26,17 @@ if __name__ == "__main__":
     for i, row in subscribers_grouped_df[eval(cfg['geo_cols'])].\
             drop_duplicates().iterrows():
 
-        [ds_curr, ds_end] = initialise_params(cfg, state_name=row['state_name'], district_name=row['district_name'])
+        initialise_params(cfg, state_name=row['state_name'], district_name=row['district_name'])
+        dates = eval(cfg['dates'])
+        slots_resp_df = find_slots_by_district(cfg['slot_check_by_district_url_multiple_days'].
+                                               format(dates[0], dates[1], dates[2], dates[3],
+                                                      dates[4], dates[5], dates[6]),
+                                               eval(cfg['request_header']))
 
-        while ds_curr <= ds_end:
-            cfg['date'] = ds_curr.strftime('%d-%m-%Y')
-            # print("Date: {}".format(cfg['date']))
+        if len(slots_resp_df) == 0:
+            continue
+        print(row['district_name'] + ", " + row['state_name'])
 
-            slots_resp_df = find_slots_by_district(cfg['slot_check_by_district_url'],
-                                                   eval(cfg['request_header']))
-
-            if len(slots_resp_df) == 0:
-                ds_curr += timedelta(int(1))
-                continue
-            print(row['district_name'] + ", " + row['state_name'])
-
-            send_email_alerts(cfg, slots_resp_df, subscribers_grouped_df)
-
-            ds_curr += timedelta(int(1))
-
+        send_email_alerts(cfg, slots_resp_df, subscribers_grouped_df)
     stop = perf_counter()
     print("Total Execution Time: {} Seconds.".format(stop-start))
