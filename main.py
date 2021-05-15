@@ -20,13 +20,15 @@ if __name__ == "__main__":
 
     cfg = get_config(config_file, mode)
 
-    subscribers_grouped_df = fetch_subscribers(cfg['subscribers_input_file_path'],
+    initialise_params(cfg)
+    subscribers_grouped_df = fetch_subscribers(cfg['subscribers_input_gsheet_url'],
                                                eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
 
     for i, row in subscribers_grouped_df[eval(cfg['geo_cols'])].\
             drop_duplicates().iterrows():
 
-        initialise_params(cfg, state_name=row['state_name'], district_name=row['district_name'])
+        set_state_district(cfg, state_name=row['state_name'], district_name=row['district_name'])
+
         dates = eval(cfg['dates'])
         slots_resp_df = find_slots_by_district(cfg['slot_check_by_district_url_multiple_days'].
                                                format(dates[0], dates[1], dates[2], dates[3],

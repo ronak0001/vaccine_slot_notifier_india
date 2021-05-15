@@ -4,3 +4,4 @@ export date=dummy
 export date_window=7
 export sender=sample_email@gmail.com
 export sender_password=Sample@Password
+export gsheet_id=dummy

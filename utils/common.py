@@ -42,6 +42,7 @@ def fetch_subscribers(path, group_by_cols):
     requirements.
 
     :param path: The location of the data file containing subscribers info
+    or the url of google sheet containing subscribers info
     :type path: str
     :param group_by_cols: list of columns for group by
     :type group_by_cols: list
@@ -152,22 +153,33 @@ def set_dates(cfg):
     pass
 
 
-def initialise_params(cfg, state_name='dummy', district_name='dummy'):
+def set_gsheet(cfg):
+    """
+    Setting up credentials of google sheet in config.
+
+    :param cfg: config parameter is used to provide necessary information
+     required to fetch and push data
+    :type cfg: dict
+    :return: no value
+    :rtype: none
+    """
+    if os.getenv('gsheet_id', '') != cfg['dummy_check']:
+        cfg['subscribers_input_gsheet_id'] = os.getenv('gsheet_id', '')
+    pass
+
+
+def initialise_params(cfg):
     """
     Initialising necessary parameters.
 
     :param cfg: config parameter is used to provide necessary information
      required to fetch and push data
     :type cfg: dict
-    :param state_name: state name
-    :type state_name: str
-    :param district_name: district name
-    :type district_name: str
     :return: no value
     :rtype: none
     """
-    set_state_district(cfg, state_name, district_name)
     set_sender(cfg)
+    set_gsheet(cfg)
     set_dates(cfg)
     pass
 
