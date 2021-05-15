@@ -49,7 +49,14 @@ def fetch_subscribers(path, group_by_cols):
     :return: Returns dataframe consisting subscribers information
     :rtype: pandas.DataFrame()
     """
-    subscribers = pd.read_csv(path)
+    subscribers_raw_resp = pd.read_csv(path)
+    subscribers = pd.DataFrame()
+    subscribers['recipients'] = subscribers_raw_resp['Email']
+    subscribers['min_age_limit'] = subscribers_raw_resp['Age Group'].apply(lambda x: x[:2])
+    subscribers['state_name'] = subscribers_raw_resp['State']
+    subscribers['district_name'] = subscribers_raw_resp[subscribers_raw_resp.columns[4:]].apply(
+        lambda x: ','.join(x.dropna().astype(str)), axis=1)
+
     subscribers = subscribers.groupby(group_by_cols).agg(lambda x: ','.join(set(x))).reset_index()
 
     return subscribers
@@ -141,10 +148,7 @@ def set_dates(cfg):
     :return: no value
     :rtype: none
     """
-    if os.getenv('date', '') != cfg['dummy_check']:
-        ds_trig = os.getenv('date', '')
-    else:
-        ds_trig = datetime.now().date().strftime("%d-%m-%Y")
+    ds_trig = datetime.now().date().strftime("%d-%m-%Y")
 
     if os.getenv('date_window', '') != cfg['dummy_check']:
         cfg['date_window'] = os.getenv('date_window', '')
@@ -300,6 +304,8 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
                                                + eval(cfg['email_message_info_col'])]\
         .groupby(eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols'])).agg(lambda x: ' \n'.join(set(x)))
 
+    slots_resp_df_aggr = slots_resp_df_aggr.reset_index().astype(str)
+    subscribers_df = subscribers_df.astype(str)
     slots_resp_final = slots_resp_df_aggr.merge(subscribers_df, on=eval(cfg['subscribers_group_by_cols'])+eval(cfg['geo_cols']))
 
     send_notification(cfg, slots_resp_final)
