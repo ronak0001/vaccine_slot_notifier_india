@@ -53,8 +53,9 @@ def fetch_subscribers(path, group_by_cols):
     subscribers = pd.DataFrame()
     subscribers['recipients'] = subscribers_raw_resp['Email']
     subscribers['min_age_limit'] = subscribers_raw_resp['Age Group'].apply(lambda x: x[:2])
+    subscribers['dose'] = subscribers_raw_resp['Dose'].apply(lambda x: x[-1])
     subscribers['state_name'] = subscribers_raw_resp['State']
-    subscribers['district_name'] = subscribers_raw_resp[subscribers_raw_resp.columns[4:]].apply(
+    subscribers['district_name'] = subscribers_raw_resp[subscribers_raw_resp.columns[4:-1]].apply(
         lambda x: ','.join(x.dropna().astype(str)), axis=1)
 
     subscribers = subscribers.groupby(group_by_cols).agg(lambda x: ','.join(set(x))).reset_index()
@@ -288,15 +289,23 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
     :return: no value
     :rtype: none
     """
+    slots_resp_df = slots_resp_df.melt(id_vars=slots_resp_df.columns.difference(eval(cfg['dose_cols_slots'])).to_list(),
+                                       value_vars=eval(cfg['dose_cols_slots']), var_name=cfg['dose_col_main'],
+                                       value_name=cfg['capacity_col_main'])
+
+    slots_resp_df[cfg['dose_col_main']] = slots_resp_df[cfg['dose_col_main']].apply(lambda x: x[-1])
+    slots_resp_df = slots_resp_df[slots_resp_df[cfg['capacity_col_main']] > 0]
+
     slots_resp_df_partial = slots_resp_df[eval(cfg['slots_resp_df_partial_cols']) +
                                           eval(cfg['subscribers_group_by_cols']) +
                                           eval(cfg['geo_cols'])]
 
-    slots_resp_df_partial.loc[:, 'info'] = "Center Name: " + slots_resp_df_partial['name'].map(str)\
-                                           + " | Pincode: " + slots_resp_df_partial['pincode'].map(str)\
-                                           + " | Capacity: " + slots_resp_df_partial['available_capacity'].map(str)\
-                                           + " | Date: " + slots_resp_df_partial['date'].map(str)\
+    slots_resp_df_partial.loc[:, 'info'] = "Pincode: " + slots_resp_df_partial['pincode'].map(str) \
+                                           + " | Center: " + slots_resp_df_partial['name'].map(str) \
                                            + " | Vaccine: " + slots_resp_df_partial['vaccine'].map(str)\
+                                           + " | Dose: " + slots_resp_df_partial['dose'].map(str)\
+                                           + " | Capacity: " + slots_resp_df_partial['capacity'].map(str)\
+                                           + " | Date: " + slots_resp_df_partial['date'].map(str)\
                                            + "\n\n"
 
     slots_resp_df_aggr = slots_resp_df_partial[eval(cfg['subscribers_group_by_cols'])

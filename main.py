@@ -13,7 +13,7 @@ import os
 from time import perf_counter
 
 
-if __name__ == "__main__":
+def main(event, context):
     start = perf_counter()
     mode = os.getenv('mode', '')
     config_file = os.getenv('config_file', '')
@@ -42,3 +42,7 @@ if __name__ == "__main__":
         send_email_alerts(cfg, slots_resp_df, subscribers_grouped_df)
     stop = perf_counter()
     print("Total Execution Time: {} Seconds.".format(stop-start))
+
+
+if __name__ == "__main__":
+    main(None, None)
