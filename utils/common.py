@@ -271,6 +271,7 @@ def find_slots_by_district(url, headers):
     :rtype: pandas.DataFrame()
     """
     response = requests.get(url, headers=headers)
+    # print(response.json())
     return pd.DataFrame(response.json()['sessions'])
 
 
@@ -295,6 +296,8 @@ def send_email_alerts(cfg, slots_resp_df, subscribers_df):
 
     slots_resp_df[cfg['dose_col_main']] = slots_resp_df[cfg['dose_col_main']].apply(lambda x: x[-1])
     slots_resp_df = slots_resp_df[slots_resp_df[cfg['capacity_col_main']] > 0]
+    if not len(slots_resp_df) > 0:
+        return
 
     slots_resp_df_partial = slots_resp_df[eval(cfg['slots_resp_df_partial_cols']) +
                                           eval(cfg['subscribers_group_by_cols']) +
